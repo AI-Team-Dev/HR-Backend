@@ -12,6 +12,7 @@ app = FastAPI(title="HR ATS Backend", version="1.0.0", openapi_url="/openapi.jso
 
 origins = [
     "http://localhost:3000",
+    "http://localhost:5173",
 ]
 
 app.add_middleware(

@@ -48,6 +48,20 @@ def signup_admin(payload: SignupAdmin, db: Session = Depends(get_db)):
     return TokenResponse(access_token=token)
 
 
+# Frontend compatibility: POST /api/signup expects { fullName, email, password, company }
+@router.post("/signup", tags=["auth-compat"])
+def signup_admin_compat(body: dict, db: Session = Depends(get_db)):
+    payload = SignupAdmin(
+        first_name=(body.get("fullName") or "").split(" ")[0] or "Admin",
+        last_name=" ".join((body.get("fullName") or "").split(" ")[1:]) or "",
+        email=body.get("email"),
+        password=body.get("password"),
+        company_name=body.get("company"),
+    )
+    token_resp = signup_admin(payload, db)
+    return {"token": token_resp.access_token, "user": {"email": payload.email, "role": "HR"}}
+
+
 @router.post("/signup/applicant", response_model=TokenResponse)
 def signup_applicant(payload: SignupApplicant, db: Session = Depends(get_db)):
     # Check if email already exists in CandidateSignup
