@@ -1,0 +1,11 @@
+from .base import Base  # noqa: F401
+from .admin_signup import AdminSignup  # noqa: F401
+from .admin_login import AdminLogin  # noqa: F401
+from .candidate_signup import CandidateSignup  # noqa: F401
+from .candidate_login import CandidateLogin  # noqa: F401
+from .education import Education  # noqa: F401
+from .experience import Experience  # noqa: F401
+from .certification import Certification  # noqa: F401
+from .job import JobDescription  # noqa: F401
+from .application import Application  # noqa: F401
+from .parsed_resume import ParsedResume  # noqa: F401
