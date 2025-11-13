@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime
+from sqlalchemy import Column, String, DateTime, Integer
 from .base import Base
 
 
@@ -6,6 +6,7 @@ class CandidateLogin(Base):
     __tablename__ = "CandidateLogin"
 
     # multiple logins per SignupID
+    id = Column(Integer, primary_key=True, autoincrement=True)
     SignupID = Column(String(20), nullable=False, index=True)
     EmailID = Column(String(255), nullable=False)
     PasswordHash = Column(String(255), nullable=False)

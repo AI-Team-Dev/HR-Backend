@@ -5,8 +5,7 @@ from .base import Base
 class ParsedResume(Base):
     __tablename__ = "ParsedResume"
 
-    # Not specifying a PK since the table may not have one defined; SQLAlchemy can still map it.
-    # If an identity/PK exists, add it here later.
+    id = Column(Integer, primary_key=True, autoincrement=True)
     JDID = Column(String(20), nullable=True, index=True)
     candidate_name = Column(String(255), nullable=True)
     email = Column(String(255), nullable=True)

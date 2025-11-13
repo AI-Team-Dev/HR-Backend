@@ -18,7 +18,12 @@ else:
         f"{settings.db_server}/{settings.db_name}?driver={quote_plus(settings.db_driver)}&TrustServerCertificate=yes"
     )
 
-engine = create_engine(connection_string, pool_pre_ping=True, fast_executemany=True)
+engine = create_engine(
+    connection_string,
+    pool_pre_ping=True,
+    fast_executemany=True,
+    use_setinputsizes=False,
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
