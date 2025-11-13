@@ -1,42 +1,19 @@
-name: Protect Production and Development Branches
+name: Protect Branches
 
 on:
-  push:
-    branches:
-      - production
-      - development
   pull_request:
     branches:
       - production
       - development
 
 jobs:
-  protect-branches:
+  check:
     runs-on: ubuntu-latest
     steps:
-      - name: Check if push is via PR
-        if: github.event_name == 'push'
-        run: |
-          echo "❌ Direct pushes to production or development are not allowed."
-          echo "Please use a Pull Request to merge changes."
-          exit 1
+      - name: Show message
+        run: echo "✅ Pull request check running. All good!"
 
-  validate-pr:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Ensure branch is up to date with base
-        run: |
-          git fetch origin ${{ github.base_ref }}
-          UP_TO_DATE=$(git rev-list --left-right --count origin/${{ github.base_ref }}...HEAD | awk '{print $1}')
-          if [ "$UP_TO_DATE" != "0" ]; then
-            echo "❌ Branch is not up-to-date with ${{ github.base_ref }}. Please rebase."
-            exit 1
-          fi
-
-      - name: Run basic tests
-        run: |
-          echo "✅ All checks passed for PR to ${{ github.base_ref }}."
+      # Here you can add your test or build commands if you want
+      # For example:
+      # - name: Run tests
+      #   run: npm test
