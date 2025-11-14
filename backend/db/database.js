@@ -1,7 +1,7 @@
 import sql from 'mssql';
 
 const config = {
-  server: process.env.MSSQL_SERVER || 'DESKTOP-0MELLFK',
+  server: process.env.MSSQL_SERVER || 'DESKTOP-GC3KL6I',
   database: process.env.MSSQL_DATABASE || 'JobPortal',
   user: process.env.MSSQL_USER || 'Test',
   password: process.env.MSSQL_PASSWORD || 'Root@123',
