@@ -1,87 +1,8 @@
-import os
-import bcrypt
-import jwt
 from flask import Blueprint, request, jsonify
 from db import db_get, db_run, db_all
 from utils import authenticate_token, require_candidate
-from sessions_service import record_login_attempt, get_recent_failed_attempts
 
 candidate_bp = Blueprint('candidate', __name__)
-
-JWT_SECRET = os.getenv('JWT_SECRET', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiZXhhbXBsZSJ9.lGrIa8yMwsB_ZSrgoniyr5FF34e9tE7TJboLqTfvifE')
-
-
-@candidate_bp.post('/signup')
-def candidate_signup():
-    try:
-        data = request.get_json(force=True)
-        name = data.get('name')
-        email = data.get('email')
-        password = data.get('password')
-        if not name or not email or not password:
-            return jsonify({'error': 'All fields are required'}), 400
-        if len(password) < 6:
-            return jsonify({'error': 'Password must be at least 6 characters'}), 400
-        existing = db_get('SELECT cid FROM candidate_signup WHERE email = ?', (email,))
-        if existing:
-            return jsonify({'error': 'Email already registered'}), 400
-        hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        db_run('INSERT INTO candidate_signup (name, email, password) VALUES (?, ?, ?)', (name, email, hashed))
-        row = db_get('SELECT TOP 1 cid FROM candidate_signup WHERE email = ?', (email,))
-        signup_id = row['cid'] if row else None
-        return jsonify({
-            'message': 'Account created successfully',
-            'user': {
-                'id': signup_id,
-                'email': email,
-                'name': name
-            }
-        }), 201
-    except Exception:
-        return jsonify({'error': 'Internal server error'}), 500
-
-
-@candidate_bp.post('/login')
-def candidate_login():
-    try:
-        data = request.get_json(force=True)
-        email = data.get('email')
-        password = data.get('password')
-        ip_address = request.remote_addr
-        user_agent = request.headers.get('User-Agent')
-        if not email or not password:
-            return jsonify({'error': 'Email and password are required'}), 400
-        failed_attempts = get_recent_failed_attempts(email, 'candidate', 15)
-        if failed_attempts >= 5:
-            record_login_attempt(email, 'candidate', 'failed', ip_address, user_agent, 'Too many failed attempts')
-            return jsonify({'error': 'Too many failed login attempts. Please try again later.'}), 429
-        signup_data = db_get(
-            'SELECT cid, name, email, password FROM candidate_signup WHERE email = ?',
-            (email,)
-        )
-        if not signup_data:
-            record_login_attempt(email, 'candidate', 'failed', ip_address, user_agent, 'User not found')
-            return jsonify({'error': 'Invalid email or password'}), 401
-        if not bcrypt.checkpw(password.encode('utf-8'), signup_data['password'].encode('utf-8')):
-            record_login_attempt(email, 'candidate', 'failed', ip_address, user_agent, 'Invalid password')
-            return jsonify({'error': 'Invalid email or password'}), 401
-        user_id = signup_data['cid']
-        token = jwt.encode({'id': user_id, 'email': signup_data['email'], 'role': 'candidate'}, JWT_SECRET, algorithm='HS256')
-        db_run('INSERT INTO candidate_login (cid, email, password) VALUES (?, ?, ?)', (user_id, signup_data['email'], signup_data['password']))
-        record_login_attempt(email, 'candidate', 'success', ip_address, user_agent)
-        profile = db_get('SELECT * FROM candidate_profiles WHERE candidate_id = ?', (user_id,))
-        user_data = {
-            'id': user_id,
-            'email': signup_data['email'],
-            'name': signup_data['name'],
-            'role': 'candidate'
-        }
-        if profile:
-            user_data['profile'] = parse_profile(profile)
-        return jsonify({'token': token, 'user': user_data})
-    except Exception:
-        return jsonify({'error': 'Internal server error'}), 500
-
 
 @candidate_bp.post('/logout')
 def candidate_logout():
